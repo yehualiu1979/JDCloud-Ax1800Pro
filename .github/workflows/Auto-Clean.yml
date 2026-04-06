@@ -5,8 +5,8 @@ on:
   schedule:
   #每逢双日进行
   #  - cron: 0 22 2-30/2 * *
-  #每逢周二进行  
-    - cron: 0 22 * * 2
+  #每逢周一进行  
+    - cron: 0 22 * * 0
       
   # 手动清理
   workflow_dispatch:
