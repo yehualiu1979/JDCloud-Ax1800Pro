@@ -1,0 +1,561 @@
+#云编译公用核心
+name: WRT-CORE
+
+on:
+  workflow_call:
+    inputs:
+      WRT_CONFIG:
+        required: true
+        type: string
+      WRT_THEME:
+        required: true
+        type: string
+      WRT_NAME:
+        required: true
+        type: string
+      WRT_SSID:
+        required: true
+        type: string
+      WRT_WORD:
+        required: true
+        type: string
+      WRT_IP:
+        required: true
+        type: string
+      WRT_PW:
+        required: true
+        type: string
+      WRT_REPO:
+        required: true
+        type: string
+      WRT_BRANCH:
+        required: true
+        type: string
+      WRT_SOURCE:
+        required: true
+        type: string
+      WRT_PACKAGE:
+        required: false
+        type: string
+      WRT_TEST:
+        required: false
+        type: string
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+  WRT_CONFIG: ${{inputs.WRT_CONFIG}}
+  WRT_THEME: ${{inputs.WRT_THEME}}
+  WRT_NAME: ${{inputs.WRT_NAME}}
+  WRT_SSID: ${{inputs.WRT_SSID}}
+  WRT_WORD: ${{inputs.WRT_WORD}}
+  WRT_IP: ${{inputs.WRT_IP}}
+  WRT_PW: ${{inputs.WRT_PW}}
+  WRT_REPO: ${{inputs.WRT_REPO}}
+  WRT_BRANCH: ${{inputs.WRT_BRANCH}}
+  WRT_SOURCE: ${{inputs.WRT_SOURCE}}
+  WRT_PACKAGE: ${{inputs.WRT_PACKAGE}}
+  WRT_TEST: ${{inputs.WRT_TEST}}
+
+jobs:
+  core:
+    name: ${{inputs.WRT_SOURCE}}
+    runs-on: ubuntu-latest
+    steps:
+      # - name: Checkout Projects
+      #   uses: actions/checkout@main
+
+      - name: Check Server Performance(检查服务器性能)
+        run: |
+          echo "警告⚠"
+          echo "分配的服务器性能有限，若选择的插件过多，务必注意CPU性能！"
+          echo -e "已知CPU型号（降序）：7763，8370C，8272CL，8171M，E5-2673 \n"
+          echo "--------------------------CPU信息--------------------------"
+          echo "CPU物理数量：$(cat /proc/cpuinfo | grep "physical id" | sort | uniq | wc -l)"
+          echo -e "CPU核心信息：$(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
+          echo "--------------------------内存信息--------------------------"
+          echo "已安装内存详细信息："
+          echo -e "$(sudo lshw -short -C memory | grep GiB) \n"
+          echo "--------------------------硬盘信息--------------------------"
+          echo "硬盘数量：$(ls /dev/sd* | grep -v [1-9] | wc -l)" && df -hT
+
+      - name: Initialization Environment(安装依赖环境)
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          #sudo apt-get install gettext libgettextpo-dev
+          sudo -E apt -yqq purge firefox
+          sudo -E apt -yqq update
+          sudo -E apt -yqq full-upgrade
+          sudo -E apt -yqq autoremove --purge
+          sudo -E apt -yqq autoclean
+          sudo -E apt -yqq clean
+          sudo -E apt -yqq install dos2unix libfuse-dev python3-netifaces
+
+          # 安装 Node.js 24（GitHub 强制要求）
+          curl -fsSL https://deb.nodesource.com/node_24.x/setup_24.x | sudo -E bash -
+          sudo -E apt install -y nodejs
+
+          sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          sudo -E systemctl daemon-reload
+          sudo -E timedatectl set-timezone "Asia/Shanghai"
+
+          # sudo mkdir -p /mnt/build_wrt
+          # sudo chown $USER:$USER /mnt/build_wrt
+          # sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/wrt
+
+          echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
+
+      - name: Install latest Clang/LLVM(安装最新的 LLVM/Clang)
+        run: |
+          sudo rm -f /etc/apt/sources.list.d/llvm*
+          sudo apt-get clean
+          sudo rm -rf /var/lib/apt/lists/*
+          sudo apt-get update
+          sudo apt-get install -y lsb-release wget software-properties-common gnupg
+          sudo mkdir -p /etc/apt/keyrings
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/llvm.gpg
+          echo "deb [signed-by=/etc/apt/keyrings/llvm.gpg] https://apt.llvm.org/noble/ llvm-toolchain-noble-18 main" | sudo tee /etc/apt/sources.list.d/llvm-18.list
+          sudo apt-get update
+          sudo apt-get install -y clang-18 llvm-18
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100
+          sudo update-alternatives --install /usr/bin/llvm-config llvm-config /usr/bin/llvm-config-18 100
+          clang --version
+          llvm-config --version
+
+      - name: Clean up and create swap(清理空间并创建交换空间)
+        run: |
+          echo "=== 清理不需要的软件释放空间 ==="
+          # 删除 .NET 组件，释放约 5-7GB 空间
+          sudo rm -rf /usr/share/dotnet
+          # 删除 Android SDK，释放约 3-5GB 空间
+          sudo rm -rf /usr/local/lib/android
+          # 删除 Haskell 工具链，释放约 2-3GB 空间
+          sudo rm -rf /opt/ghc
+          # 删除 CodeQL 工具，释放约 2-3GB 空间
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          # 删除 Docker 镜像，释放约 5-10GB 空间
+          sudo docker image prune --all --force
+          echo "... 清理完成"
+
+          echo "=== 创建 8GB swap 文件 ==="
+          # 先关闭现有的 swap 文件（如果存在）
+          sudo swapoff /swapfile 2>/dev/null || true
+          sudo rm -f /swapfile
+          # 创建新的 swap 文件
+          sudo fallocate -l 8G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          echo "... swap 创建完成"
+
+          echo "=== 磁盘和内存信息 ==="
+          echo "磁盘空间："
+          df -h
+          echo "内存和交换空间："
+          free -h
+
+      - name: Checkout Projects(拉取云编译仓库(本仓库)脚本)
+        uses: actions/checkout@main
+
+      - name: Initialization Values(初始化变量)
+        run: |
+          echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d-%H.%M.%S")" >> $GITHUB_ENV
+          echo "WRT_MARK=${GITHUB_REPOSITORY%%/*}" >> $GITHUB_ENV
+          echo "WRT_INFO=${WRT_SOURCE%%/*}" >> $GITHUB_ENV
+          echo "WRT_TARGET=$(grep -m 1 -oP '^CONFIG_TARGET_\K[\w]+(?=\=y)' ./Config/$WRT_CONFIG.txt)" >> $GITHUB_ENV
+          echo "WRT_KVER=none" >> $GITHUB_ENV
+          echo "WRT_LIST=none" >> $GITHUB_ENV
+
+          sudo mkdir -p $OPENWRT_PATH/build_wrt
+          sudo chown $USER:$USER $OPENWRT_PATH/build_wrt
+          sudo ln -s $OPENWRT_PATH/build_wrt $GITHUB_WORKSPACE/wrt
+
+      - name: Clone Code(拉取编译的固件源码)
+        run: |
+          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
+
+          cd ./wrt/ && echo "WRT_HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
+
+          # GitHub Action 移除国内下载源
+          PROJECT_MIRRORS_FILE="./scripts/projectsmirrors.json"
+          if [ -f "$PROJECT_MIRRORS_FILE" ]; then
+            sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
+          fi
+
+      - name: Check Scripts(将所有的rxt sh后缀文件全部赋予执行权限)
+        run: |
+          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+
+      - name: Check Caches
+        id: check-cache
+        if: env.WRT_TEST != 'true'
+        uses: actions/cache@main
+        with:
+          key: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_HASH}}
+          restore-keys: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}
+          path: |
+            ./wrt/.ccache
+            # 【新增】参考 test3-main：缓存下载目录，避免重复下载依赖，减少 30-60% 下载时间
+            ./wrt/dl
+            ./wrt/staging_dir/host*
+            ./wrt/staging_dir/tool*
+          # 【新增】参考 test3-main：启用跨平台缓存支持，提高缓存复用率
+          enableCrossOsArchive: true
+
+      - name: Update Caches(更新缓存)
+        if: env.WRT_TEST != 'true'
+        run: |
+          if [ -d "./wrt/staging_dir" ]; then
+            find "./wrt/staging_dir" -type d -name "stamp" -not -path "*target*" | while read -r DIR; do
+              find "$DIR" -type f -exec touch {} +
+            done
+
+            mkdir -p ./wrt/tmp && echo "1" > ./wrt/tmp/.build
+
+            echo "toolchain skiped done!"
+          else
+            echo "caches missed!"
+          fi
+
+          if ${{steps.check-cache.outputs.cache-hit != 'true'}}; then
+            CACHE_LIST=$(gh cache list --key "$WRT_CONFIG-$WRT_INFO" | cut -f 1)
+            for CACHE_KEY in $CACHE_LIST; do
+              gh cache delete $CACHE_KEY
+            done
+
+            echo "caches cleanup done!"
+          fi
+
+          # 【新增】参考 test3-main：优化缓存大小，避免磁盘空间不足
+          echo "=== 优化缓存大小 ==="
+          if [ -d "./wrt/.ccache" ]; then
+            # 限制 ccache 为 2GB，防止缓存过大占用过多磁盘空间
+            ccache -M 2G
+            ccache -c
+            echo "ccache 已优化为 2GB"
+          fi
+
+          # 【新增】参考 test3-main：检查磁盘空间
+          AVAILABLE_SPACE=$(df -BG . | tail -1 | awk '{print $4}' | sed 's/G//')
+          echo "编译前可用空间: ${AVAILABLE_SPACE}GB"
+
+          # 【新增】参考 test3-main：磁盘空间不足警告和清理
+          if [ $AVAILABLE_SPACE -lt 10 ]; then
+            echo "警告：磁盘空间严重不足，执行紧急清理..."
+            sudo apt-get autoremove -y
+            sudo apt-get clean
+            sudo rm -rf /var/log/*.gz
+            sudo rm -rf /var/cache/apt/archives/*.deb
+            sudo rm -rf /tmp/*
+          fi
+
+      - name: Update Feeds(更新软件包)
+        run: |
+          cd ./wrt/
+
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: 下载bandix安装包（网络流量监控）
+        run: |
+          cd ./wrt/
+          # 克隆整个前端仓库到临时目录
+          git clone https://github.com/timsaya/luci-app-bandix.git /tmp/bandix-temp
+
+          # 移动实际的前端插件目录到目标位置
+          mv /tmp/bandix-temp/luci-app-bandix package/luci-app-bandix
+
+          # 克隆整个后端仓库到临时目录
+          git clone https://github.com/timsaya/openwrt-bandix.git /tmp/bandix-backend-temp
+
+          # 移动实际的后端插件目录到目标位置
+          mv /tmp/bandix-backend-temp/openwrt-bandix package/openwrt-bandix
+
+          # 清理临时目录
+          rm -rf /tmp/bandix-temp /tmp/bandix-backend-temp
+          echo "Bandix installation download!"
+
+      - name: 下载passwall2安装包
+        run: |
+          cd ./wrt/
+          # 克隆整个仓库到临时目录
+          git clone https://github.com/Openwrt-Passwall/openwrt-passwall2.git /tmp/passwall2-temp
+
+          # 移动实际的插件目录到目标位置
+          mv /tmp/passwall2-temp/luci-app-passwall2 package/luci-app-passwall2
+          
+          # 清理临时目录
+          rm -rf /tmp/passwall2-temp
+          echo "passwall2 installation download!"
+
+      - name: 下载lucky安装包
+        run: |
+          cd ./wrt/
+          #克隆lucky仓库
+          git clone https://github.com/gdy666/luci-app-lucky.git package/lucky
+          echo "lucky installation download!"
+
+      - name: Custom Packages(自定义软件包设置/更新)
+        run: |
+          cd ./wrt/package/
+
+          $GITHUB_WORKSPACE/Scripts/Packages.sh
+          $GITHUB_WORKSPACE/Scripts/Handles.sh
+
+      - name: Custom Settings(自定义设置)
+        run: |
+          cd ./wrt/
+
+          if [[ "${WRT_CONFIG,,}" == *"test"* ]]; then
+            cat $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt >> .config
+          else
+            cat $GITHUB_WORKSPACE/Config/$WRT_CONFIG.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
+          fi
+
+          $GITHUB_WORKSPACE/Scripts/Settings.sh
+
+          make defconfig -j$(nproc) && make clean -j$(nproc)
+
+          #   如果原生源能够使用就没有必要配置这一部分。
+
+          #       # 直接配置 APK 软件源（北京大学镜像）
+          #       if [[ "${WRT_CONFIG,,}" == *"ipq60"* ]]; then
+          #         mkdir -p ./package/base-files/files/etc/apk/repositories.d/
+          #         cat > ./package/base-files/files/etc/apk/repositories.d/distfeeds.list << 'EOF'
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/targets/qualcommax/ipq60xx/packages/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/base/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/luci/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/nss_packages/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/packages/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/routing/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/sqm_scripts_nss/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/telephony/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/video/packages.adb
+          #   EOF
+          #       fi
+
+          #原生源和apk源。
+          
+          #       # 追加额外 APK 源（保留自动生成的源）
+          #       if [[ "${WRT_CONFIG,,}" == *"ipq60"* ]]; then
+          #         mkdir -p ./package/base-files/files/etc/uci-defaults/
+          #         cat > ./package/base-files/files/etc/uci-defaults/99-add-extra-repos << 'SCRIPT_EOF'
+          #   #!/bin/sh
+
+          #   # 追加额外软件源到 distfeeds.list
+          #   cat >> /etc/apk/repositories.d/distfeeds.list << 'REPOS_EOF'
+
+          # 额外软件源 - 北京大学镜像
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/targets/qualcommax/ipq60xx/packages/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/base/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/luci/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/nss_packages/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/packages/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/routing/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/sqm_scripts_nss/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/telephony/packages.adb
+          #   https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/video/packages.adb
+          #   REPOS_EOF
+
+          # 删除自身脚本，避免重复执行
+          #  rm -f /etc/uci-defaults/99-add-extra-repos
+          #  SCRIPT_EOF
+          #      fi
+
+          # 原生源追加ipk和apk两种源，自动选择。
+
+          # 追加额外软件源（支持 APK 和 OPKG 两种模式）
+          if [[ "${WRT_CONFIG,,}" == *"ipq60"* ]]; then
+            mkdir -p ./package/base-files/files/etc/uci-defaults/
+            cat > ./package/base-files/files/etc/uci-defaults/99-add-extra-repos << 'SCRIPT_EOF'
+
+          # 检测包管理器模式
+          if [ -f "/etc/apk/repositories.d/distfeeds.list" ]; then
+            # APK 模式
+            cat >> /etc/apk/repositories.d/distfeeds.list << 'REPOS_EOF'
+
+          # 额外软件源 - 北京大学镜像 (APK)
+          https://mirrors.pku.edu.cn/immortalwrt/snapshots/targets/qualcommax/ipq60xx/packages/packages.adb
+          https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/base/packages.adb
+          https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/luci/packages.adb
+          https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/nss_packages/packages.adb
+          https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/packages/packages.adb
+          https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/routing/packages.adb
+          https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/sqm_scripts_nss/packages.adb
+          https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/telephony/packages.adb
+          https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/video/packages.adb
+          REPOS_EOF
+
+          elif [ -f "/etc/opkg/distfeeds.conf" ]; then
+            # OPKG 模式
+            cat >> /etc/opkg/distfeeds.conf << 'REPOS_EOF'
+
+          # 额外软件源 - 北京大学镜像 (OPKG)
+          src/gz immortalwrt_core_pku https://mirrors.pku.edu.cn/immortalwrt/snapshots/targets/qualcommax/ipq60xx/packages
+          src/gz immortalwrt_base_pku https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/base
+          src/gz immortalwrt_luci_pku https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/luci
+          src/gz immortalwrt_nss_packages_pku https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/nss_packages
+          src/gz immortalwrt_packages_pku https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/packages
+          src/gz immortalwrt_routing_pku https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/routing
+          src/gz immortalwrt_sqm_scripts_nss_pku https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/sqm_scripts_nss
+          src/gz immortalwrt_telephony_pku https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/telephony
+          src/gz immortalwrt_video_pku https://mirrors.pku.edu.cn/immortalwrt/snapshots/packages/aarch64_cortex-a53/video
+          REPOS_EOF
+          fi
+
+          # 删除自身脚本，避免重复执行
+          rm -f /etc/uci-defaults/99-add-extra-repos
+          SCRIPT_EOF
+          fi
+
+      # 【新增】参考 test3-main：编译前磁盘空间检查
+      - name: Check Disk Space Before Compilation(编译前磁盘空间检查)
+        if: env.WRT_TEST != 'true'
+        run: |
+          cd ./wrt/
+          echo "=== 编译前磁盘空间检查 ==="
+          df -hT
+          AVAILABLE_SPACE=$(df -BG . | tail -1 | awk '{print $4}' | sed 's/G//')
+          echo "编译前可用空间: ${AVAILABLE_SPACE}GB"
+
+          # 【新增】参考 test3-main：磁盘空间不足警告
+          if [ $AVAILABLE_SPACE -lt 15 ]; then
+            echo "警告：磁盘空间不足，建议至少 15GB 可用空间"
+          fi
+
+      - name: Download Packages(下载软件包依赖)
+        if: env.WRT_TEST != 'true'
+        run: |
+          cd ./wrt/
+
+          make download -j$(nproc)
+
+      - name: Compile Firmware(编译固件)
+        if: env.WRT_TEST != 'true'
+        run: |
+          cd ./wrt/
+
+          make -j$(nproc) || make -j$(nproc) V=s
+          #make -j1 || make -j1 V=sc
+
+      - name: Machine Information(机器信息)
+        run: |
+          cd ./wrt/
+
+          echo "======================="
+          lscpu | grep -E "name|Core|Thread"
+          echo "======================="
+          df -h
+          echo "======================="
+          du -h --max-depth=1
+          echo "======================="
+
+          # 【新增】参考 test3-main：编译后缓存优化
+          echo "=== 缓存优化 ==="
+
+          # 限制 ccache 大小到 2GB，防止缓存过大
+          if [ -d "./.ccache" ]; then
+            CCACHE_SIZE=$(du -sh ./.ccache | awk '{print $1}')
+            echo "当前 ccache 大小: $CCACHE_SIZE"
+            ccache -M 2G
+            ccache -c  # 清理无用缓存
+            echo "ccache 已限制为 2GB"
+          fi
+
+          # 【新增】参考 test3-main：清理下载目录中的旧文件
+          if [ -d "./dl" ]; then
+            DL_SIZE=$(du -sh ./dl | awk '{print $1}')
+            echo "当前下载目录大小: $DL_SIZE"
+            # 只保留最近30天的文件，避免占用过多空间
+            find ./dl -type f -mtime +30 -delete 2>/dev/null || true
+            echo "下载目录已清理（保留30天内的文件）"
+          fi
+
+      - name: Package Firmware(打包固件)
+        run: |
+          #!/usr/bin/env bash
+          set -ex   # -e 表示遇到错误退出，-x 表示打印命令
+          cd ./wrt/ && mkdir ./upload/
+
+          cp -f ./.config ./upload/Config-"$WRT_CONFIG"-"$WRT_INFO"-"$WRT_DATE".txt
+
+          if [[ $WRT_TEST != 'true' ]]; then
+            echo "WRT_KVER=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^kernel - \K[\d\.]+' {} \;)" >> $GITHUB_ENV
+            echo "WRT_LIST=$(find ./bin/targets/ -type f -name "*.manifest" -exec grep -oP '^luci-(app|theme)[^ ]*' {} \; | tr '\n' ' ')" >> $GITHUB_ENV
+
+            echo "NSS_FIRMWARE_VERSION=$(grep -oP '^CONFIG_NSS_FIRMWARE_VERSION_\K[\d_]+(?==y)' .config | sed 's/_/./g')" >> $GITHUB_ENV
+
+            find ./bin/targets/ -iregex ".*\(buildinfo\|json\|sha256sums\|packages\)$" -exec rm -rf {} +
+
+            for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do
+              EXT=$(basename $FILE | cut -d '.' -f 2-)
+              NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "\($WRT_TARGET\).*")
+              NEW_FILE="$WRT_INFO"-"$NAME"-"$WRT_DATE"."$EXT"
+              mv -f $FILE ./upload/$NEW_FILE
+            done
+
+            #for FILE in $(find ./bin/targets/ -type f -iname "*$WRT_TARGET*") ; do
+            #  EXT=$(basename $FILE | cut -d '.' -f 2-)
+            #  NAME=$(basename $FILE | cut -d '.' -f 1 | grep -io "sysupgrade")  # 只提取 sysupgrade
+            #  DATE=$(echo "$WRT_DATE" | cut -d'-' -f1)  # 只保留日期部分
+            #  NEW_FILE="$WRT_INFO"-"$NAME"-"$DATE"."$EXT"
+            #  mv -f $FILE ./upload/$NEW_FILE
+            #done
+
+            find ./bin/targets/ -type f -exec mv -f {} ./upload/ \;
+
+            make clean -j$(nproc)
+
+            # 【新增】参考 test3-main：编译后清理和磁盘空间检查
+            echo "=== 编译后清理 ==="
+            AVAILABLE_SPACE=$(df -BG . | tail -1 | awk '{print $4}' | sed 's/G//')
+            echo "编译后可用空间: ${AVAILABLE_SPACE}GB"
+
+            # 【新增】参考 test3-main：如果空间不足，执行额外清理
+            if [ $AVAILABLE_SPACE -lt 5 ]; then
+              echo "警告：磁盘空间严重不足，执行额外清理..."
+              sudo apt-get autoremove -y
+              sudo apt-get clean
+              sudo rm -rf /var/log/*.gz
+              sudo find /var/log -type f -name "*.gz" -delete
+
+              # 【新增】参考 test3-main：限制 ccache 大小（临时减少到 1GB）
+              if [ -d "./.ccache" ]; then
+                ccache -M 1G
+                ccache -c
+              fi
+
+              echo "清理完成，当前空间："
+              df -h
+            fi
+          fi
+
+      - name: Release Firmware(发布固件)
+        # uses: softprops/action-gh-release@v2
+        # uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631
+        uses: softprops/action-gh-release@master
+        with:
+          # tag_name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_DATE}}
+          tag_name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_BRANCH}}-${{env.WRT_DATE}}
+          files: ./wrt/upload/*.*
+          body: |
+            这是京东AX1800Pro专用固件！
+            请注意是否为需要的固件！
+
+            源码：${{env.WRT_REPO}}
+            分支：${{env.WRT_BRANCH}}
+            提交：${{env.WRT_HASH}}
+
+            配置：${{env.WRT_CONFIG}}
+            平台：${{env.WRT_TARGET}}
+
+            登录地址：${{env.WRT_IP}}
+            登录密码：${{env.WRT_PW}}
+
+            WIFI名称：${{env.WRT_SSID}}
+            WIFI密码：${{env.WRT_WORD}}
+
+            NSS版本：${{env.NSS_FIRMWARE_VERSION}}
+
+            内核版本：${{env.WRT_KVER}}
+            插件列表：${{env.WRT_LIST}}
