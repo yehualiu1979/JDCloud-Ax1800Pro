@@ -4,7 +4,7 @@ CONFIG_PACKAGE_luci-app-homeproxy=y                    # 科学上网插件（�
 #CONFIG_PACKAGE_luci-app-nikki=y                       # Nikki 科学上网插件
 
 # ==================== 增加插件 ====================
-CONFIG_PACKAGE_luci-app-autoreboot=y                   # 自动重启插件（定时重启路由器）
+#CONFIG_PACKAGE_luci-app-autoreboot=y                   # 自动重启插件（定时重启路由器）
 CONFIG_PACKAGE_luci-app-netspeedtest=y                 # 网络测速插件（测试网络速度）
 CONFIG_PACKAGE_luci-app-partexp=y                      # 分区扩展插件（扩展存储分区）
 CONFIG_PACKAGE_luci-app-samba4=y                       # Samba 文件共享（Windows 文件共享）
