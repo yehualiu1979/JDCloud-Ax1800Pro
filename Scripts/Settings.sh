@@ -117,7 +117,7 @@ echo "CONFIG_PACKAGE_luci-app-tailscale=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-app-advancedplus=n" >> ./.config
 
 #argon主题
-echo "CONFIG_PACKAGE_luci-app-argon-config=y >> ./.config
+echo "CONFIG_PACKAGE_luci-app-argon-config=y" >> ./.config
 #酷猫主题
 echo "CONFIG_PACKAGE_luci-theme-kucat=y" >> ./.config
 # 可以让FinalShell查看文件列表并且ssh连上不会自动断开
