@@ -115,9 +115,11 @@ fi
 echo "CONFIG_PACKAGE_luci-app-wolplus=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-app-tailscale=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-app-advancedplus=n" >> ./.config
-#酷猫主题
-#echo "CONFIG_PACKAGE_luci-theme-kucat=n" >> ./.config
 
+#argon主题
+echo "CONFIG_PACKAGE_luci-app-argon-config=y >> ./.config
+#酷猫主题
+echo "CONFIG_PACKAGE_luci-theme-kucat=y" >> ./.config
 # 可以让FinalShell查看文件列表并且ssh连上不会自动断开
 echo "CONFIG_PACKAGE_openssh-sftp-server=y" >> ./.config
 # Bandix 网络流量监控后端
