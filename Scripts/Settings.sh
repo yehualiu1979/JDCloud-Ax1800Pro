@@ -115,7 +115,8 @@ fi
 echo "CONFIG_PACKAGE_luci-app-wolplus=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-app-tailscale=n" >> ./.config
 echo "CONFIG_PACKAGE_luci-app-advancedplus=n" >> ./.config
-echo "CONFIG_PACKAGE_luci-theme-kucat=n" >> ./.config
+#酷猫主题
+#echo "CONFIG_PACKAGE_luci-theme-kucat=n" >> ./.config
 
 # 可以让FinalShell查看文件列表并且ssh连上不会自动断开
 echo "CONFIG_PACKAGE_openssh-sftp-server=y" >> ./.config
