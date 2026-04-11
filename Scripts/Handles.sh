@@ -29,6 +29,33 @@ if [ -d *"luci-theme-argon"* ]; then
 	sed -i "/font-weight:/ { /important/! { /\/\*/! s/:.*/: var(--font-weight);/ } }" $(find ./luci-theme-argon -type f -iname "*.css")
 	sed -i "s/primary '.*'/primary '#5e72e4'/; s/'0.2'/'0.5'/; s/'none'/'Unsplash'/; s/'600'/'normal'/" ./luci-app-argon-config/root/etc/config/argon
 
+	# 添加 wallhaven 壁纸源支持
+	# 1. 在前端配置文件中添加 wallhaven 选项
+	sed -i $"/o.value('unsplash', _('Unsplash'));/a\\
+	o.value('wallhaven', _('Wallhaven'));" ./luci-app-argon-config/htdocs/luci-static/resources/view/argon-config.js
+
+	# 2. 在后端脚本中添加 wallhaven API 调用
+	sed -i '/esac/i\
+wallhaven)\
+\tcurl -s -m 3 \\\
+\t\t"https://wallhaven.cc/api/v1/search?resolutions=1920x1080&sorting=random" |\
+\t\tjsonfilter -qe "@.data[0].path"\
+\t;;\
+wallhaven_*)\
+\tlocal tag_id="${WEB_PIC_SRC#wallhaven_}"\
+\tlocal use_reso="resolutions"\
+\t[ "$EXACT_RESO" -eq "1" ] || use_reso="atleast"\
+\t[ -z "$API_KEY" ] || API_KEY="apikey=$API_KEY&"\
+\tcurl -s -m 3 \\\
+\t\t"https://wallhaven.cc/api/v1/search?${API_KEY}q=id%3A${tag_id}&${use_reso}=1920x1080&sorting=random" |\
+\t\tjsonfilter -qe '"'"'@.data[0].path'"'"'\
+\t;;' ./luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
+
+	# 3. 添加配置变量
+	sed -i '/WEB_PIC_SRC.*uci -q get/a\
+API_KEY="$(uci -q get argon.@global[0].use_api_key)"\
+EXACT_RESO="$(uci -q get argon.@global[0].use_exact_resolution || echo '"'"'1'"'"')"' ./luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
+
 	cd $PKG_PATH && echo "theme-argon has been fixed!"
 fi
 
