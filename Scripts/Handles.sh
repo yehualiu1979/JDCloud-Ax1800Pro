@@ -59,6 +59,10 @@ EXACT_RESO="$(uci -q get argon.@global[0].use_exact_resolution || echo '"'"'1'"'
    # 4. 删除 background/README.md
    rm -f ./luci-theme-argon/htdocs/luci-static/argon/background/README.md
 
+   # 5. 下载自定义壁纸
+   wget -q -O ./luci-theme-argon/htdocs/luci-static/argon/img/bg.webp \
+   "https://raw.githubusercontent.com/dharmx/walls/main/minimal/a_flower_on_a_dark_background.png"
+
 	cd $PKG_PATH && echo "theme-argon has been fixed!"
 fi
 
