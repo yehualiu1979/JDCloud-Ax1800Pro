@@ -56,6 +56,9 @@ wallhaven_*)\
 API_KEY="$(uci -q get argon.@global[0].use_api_key)"\
 EXACT_RESO="$(uci -q get argon.@global[0].use_exact_resolution || echo '"'"'1'"'"')"' ./luci-theme-argon/root/usr/libexec/rpcd/luci.argon_wallpaper
 
+   # 4. 删除 background/README.md
+   rm -f ./luci-theme-argon/htdocs/luci-static/argon/background/README.md
+
 	cd $PKG_PATH && echo "theme-argon has been fixed!"
 fi
 
