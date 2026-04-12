@@ -288,12 +288,12 @@ jobs:
 #          rm -rf /tmp/passwall2-temp
 #          echo "passwall2 installation download!"
 
-      - name: 下载lucky安装包
-        run: |
-          cd ./wrt/
-          #克隆lucky仓库
-          git clone https://github.com/gdy666/luci-app-lucky.git package/lucky
-          echo "lucky installation download!"
+#      - name: 下载lucky安装包
+#        run: |
+#          cd ./wrt/
+#          #克隆lucky仓库
+#          git clone https://github.com/gdy666/luci-app-lucky.git package/lucky
+#          echo "lucky installation download!"
 
       - name: Custom Packages(自定义软件包设置/更新)
         run: |
