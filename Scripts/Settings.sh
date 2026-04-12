@@ -145,7 +145,7 @@ echo "CONFIG_PACKAGE_btop=y" >> ./.config
 # 广告屏蔽大师Plus
 # echo "CONFIG_PACKAGE_luci-app-adbyby-plus=y" >> ./.config 
 # 强大的工具(需要添加源或git clone)
-echo "CONFIG_PACKAGE_luci-app-lucky=y" >> ./.config
+#echo "CONFIG_PACKAGE_luci-app-lucky=y" >> ./.config
 # 网络通信工具
 echo "CONFIG_PACKAGE_curl=y" >> ./.config
 # CPU 性能优化调节设置
