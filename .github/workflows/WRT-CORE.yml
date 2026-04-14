@@ -282,7 +282,7 @@ jobs:
           git clone https://github.com/Openwrt-Passwall/openwrt-passwall2.git /tmp/passwall2-temp
 
           # 移动实际的插件目录到目标位置
-          mv /tmp/passwall-temp/luci-app-passwall2 package/luci-app-passwall2
+          mv /tmp/passwall2-temp/luci-app-passwall2 package/luci-app-passwall2
           
           # 清理临时目录
           rm -rf /tmp/passwall2-temp
