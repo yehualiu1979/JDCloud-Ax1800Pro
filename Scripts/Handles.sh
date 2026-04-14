@@ -133,6 +133,6 @@ fi
        echo "Passwall packages cloned successfully!"
    fi
 
-  原因：
-   1. 先移除 OpenWRT feeds 中的旧版本核心库，避免版本冲突
-   2. 再克隆 Passwall 自己的依赖包，确保使用的是 Passwall 需要的版本
+#  原因：
+#   1. 先移除 OpenWRT feeds 中的旧版本核心库，避免版本冲突
+#   2. 再克隆 Passwall 自己的依赖包，确保使用的是 Passwall 需要的版本
