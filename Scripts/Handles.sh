@@ -116,3 +116,23 @@ if [ -f "$CM_FILE" ]; then
 
 	cd $PKG_PATH && echo "coremark has been fixed!"
 fi
+
+   # 克隆 Passwall 依赖包（passwall-packages）
+   if [ ! -d "$GITHUB_WORKSPACE/wrt/package/passwall-packages" ]; then
+       cd $GITHUB_WORKSPACE/wrt/package/
+       git clone https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git passwall-packages
+       echo "Passwall packages cloned successfully!"
+   fi
+
+   # 移除 OpenWRT feeds 自带的 Passwall 依赖核心库（避免版本冲突）
+   if [ -d "$GITHUB_WORKSPACE/wrt/feeds/packages/net" ]; then
+       rm -rf $GITHUB_WORKSPACE
+   /wrt/feeds/packages/net/{xray-core,v2ray-geodata,sing-box,chinadns-ng,dns2socks,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan-plus,tuic-client,v2ray-plugin,xray-p
+   lugin,geoview,shadow-tls}
+
+       echo "Removed conflicting packages from feeds!"
+   fi
+
+ # 这段代码会：
+ #  1. 克隆 Passwall 的依赖包到 package/passwall-packages 目录
+ #  2. 删除 OpenWRT feeds 中与 Passwall 冲突的旧版本核心库
