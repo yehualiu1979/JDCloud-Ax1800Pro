@@ -275,18 +275,18 @@ jobs:
           rm -rf /tmp/bandix-temp /tmp/bandix-backend-temp
           echo "Bandix installation download!"
 
-#      - name: 下载passwall2安装包
-#        run: |
-#          cd ./wrt/
-#          # 克隆整个仓库到临时目录
-#          git clone https://github.com/Openwrt-Passwall/openwrt-passwall2.git /tmp/passwall2-temp
+      - name: 下载passwall安装包
+        run: |
+          cd ./wrt/
+          # 克隆整个仓库到临时目录
+          git clone https://github.com/Openwrt-Passwall/openwrt-passwall.git /tmp/passwall-temp
 
           # 移动实际的插件目录到目标位置
-#          mv /tmp/passwall2-temp/luci-app-passwall2 package/luci-app-passwall2
+          mv /tmp/passwall-temp/luci-app-passwall package/luci-app-passwall
           
-#          # 清理临时目录
-#          rm -rf /tmp/passwall2-temp
-#          echo "passwall2 installation download!"
+          # 清理临时目录
+          rm -rf /tmp/passwall-temp
+          echo "passwall installation download!"
 
 #      - name: 下载lucky安装包
 #        run: |
