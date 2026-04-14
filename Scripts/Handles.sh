@@ -117,7 +117,8 @@ if [ -f "$CM_FILE" ]; then
 	cd $PKG_PATH && echo "coremark has been fixed!"
 fi
 
-   # 移除 OpenWRT feeds 自带的 Passwall 依赖核心库（避免版本冲突）
+   # 修复passwall编译失败
+   #移除 OpenWRT feeds 自带的 Passwall 依赖核心库（避免版本冲突）
    if [ -d "$GITHUB_WORKSPACE/wrt/feeds/packages/net" ]; then
        rm -rf $GITHUB_WORKSPACE
    /wrt/feeds/packages/net/{xray-core,v2ray-geodata,sing-box,chinadns-ng,dns2socks,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan-plus,tuic-client,v2ray-plugin,xray-p
