@@ -47,6 +47,13 @@ UPDATE_PACKAGE() {
 # UPDATE_PACKAGE "包名" "项目地址" "项目分支" "pkg/name，可选，pkg为从大杂烩中单独提取包名插件；name为重命名为包名"
 UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-25.12"
 #UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "master"
+UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
+#  当使用 "pkg" 参数时，函数会：
+#   1. 克隆整个仓库：下载 https://github.com/Openwrt-Passwall/openwrt-passwall.git
+#   2. 提取匹配的目录：在克隆的仓库中查找名称包含 passwall 的目录（最多3层深度）
+#   3. 复制到当前目录：将找到的 passwall 相关目录复制到 ./package/ 目录
+#   4. 删除克隆的仓库：清理临时克隆的整个仓库
+
 #使用argon原作者的源码
 #UPDATE_PACKAGE "argon" "jerrykuku/luci-theme-argon" "master"
 #UPDATE_PACKAGE "argon-config" "jerrykuku/luci-app-argon-config" "master"
