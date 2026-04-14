@@ -143,7 +143,7 @@ fi
      xray-plugin,
      geoview,
      shadow-tls
-   }
+}
        echo "Removed conflicting packages from feeds!"
    fi
 
