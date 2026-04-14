@@ -92,8 +92,8 @@ jobs:
           sudo -E apt -yqq install dos2unix libfuse-dev python3-netifaces
 
           # 安装 Node.js 24（GitHub 强制要求）
-          curl -fsSL https://deb.nodesource.com/node_24.x/setup_24.x | sudo -E bash -
-          sudo -E apt install -y nodejs
+          #curl -fsSL https://deb.nodesource.com/node_24.x/setup_24.x | sudo -E bash -
+          #sudo -E apt install -y nodejs
 
           sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
           sudo -E systemctl daemon-reload
