@@ -1,6 +1,6 @@
 # ==================== 科学插件调整 ====================
 #CONFIG_PACKAGE_luci-app-homeproxy=y                    # 科学上网插件（支持 Clash API，性能好）
-CONFIG_PACKAGE_luci-app-passwall2=y                    # Passwall 科学上网插件（轻量级）
+CONFIG_PACKAGE_luci-app-passwall=y                    # Passwall 科学上网插件（轻量级）
 #CONFIG_PACKAGE_luci-app-nikki=y                       # Nikki 科学上网插件
 
 # ==================== 增加插件 ====================
