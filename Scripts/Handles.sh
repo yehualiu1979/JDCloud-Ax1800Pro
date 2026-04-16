@@ -119,36 +119,80 @@ fi
 
    # 修复passwall编译失败
    #移除 OpenWRT feeds 自带的 Passwall 依赖核心库（避免版本冲突）
-      FEEDS_NET_DIR="$GITHUB_WORKSPACE/wrt/feeds/packages/net"
-
-      echo "DEBUG: Checking if $FEEDS_NET_DIR exists..."
-      if [ -d "$FEEDS_NET_DIR" ]; then
-          echo "DEBUG: Directory exists, removing conflicting packages..."
-          rm -rf $FEEDS_NET_DIR/{
-               xray-core,
-               v2ray-geodata,
-               sing-box,
-               chinadns-ng,
-               dns2socks,
-               hysteria,
-               ipt2socks,
-               microsocks,
-               naiveproxy,
-               shadowsocks-libev,
-               shadowsocks-rust,
-               shadowsocksr-libev,
-               simple-obfs,
-               tcping,
-               trojan-plus,
-               tuic-client,
-               v2ray-plugin,
-               xray-plugin,
-               geoview,
-               shadow-tls}
-          echo "Removed conflicting packages from feeds!"
-      else
-          echo "DEBUG: Directory $FEEDS_NET_DIR does not exist!"
-      fi
+   echo "DEBUG: Starting Passwall fix..."
+   echo "DEBUG: GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+   echo "DEBUG: Current directory=$(pwd)"
+   
+   # 使用绝对路径，避免符号链接解析问题
+   FEEDS_NET_DIR="$GITHUB_WORKSPACE/wrt/feeds/packages/net"
+   echo "DEBUG: FEEDS_NET_DIR=$FEEDS_NET_DIR"
+   echo "DEBUG: Checking if directory exists..."
+   
+   if [ -d "$FEEDS_NET_DIR" ]; then
+       echo "DEBUG: Directory exists, removing conflicting packages..."
+       echo "DEBUG: Listing packages before removal:"
+       ls -la "$FEEDS_NET_DIR" | grep -E "(xray|shadowsocks|sing-box|chinadns|dns2socks|hysteria|ipt2socks|microsocks|naiveproxy|simple-obfs|tcping|trojan|tuic|v2ray|geoview|shadow-tls)" || echo "DEBUG: No matching packages found"
+       
+       rm -rf $FEEDS_NET_DIR/{
+            xray-core,
+            v2ray-geodata,
+            sing-box,
+            chinadns-ng,
+            dns2socks,
+            hysteria,
+            ipt2socks,
+            microsocks,
+            naiveproxy,
+            shadowsocks-libev,
+            shadowsocks-rust,
+            shadowsocksr-libev,
+            simple-obfs,
+            tcping,
+            trojan-plus,
+            tuic-client,
+            v2ray-plugin,
+            xray-plugin,
+            geoview,
+            shadow-tls}
+       
+       echo "DEBUG: Listing packages after removal:"
+       ls -la "$FEEDS_NET_DIR" | grep -E "(xray|shadowsocks|sing-box|chinadns|dns2socks|hysteria|ipt2socks|microsocks|naiveproxy|simple-obfs|tcping|trojan|tuic|v2ray|geoview|shadow-tls)" || echo "DEBUG: All conflicting packages removed"
+       echo "Removed conflicting packages from feeds!"
+   else
+       echo "DEBUG: ERROR - Directory $FEEDS_NET_DIR does not exist!"
+       echo "DEBUG: Checking alternative paths..."
+       echo "DEBUG: wrt directory exists: $([ -d "$GITHUB_WORKSPACE/wrt" ] && echo "YES" || echo "NO")"
+       echo "DEBUG: feeds directory exists: $([ -d "$GITHUB_WORKSPACE/wrt/feeds" ] && echo "YES" || echo "NO")"
+       echo "DEBUG: packages directory exists: $([ -d "$GITHUB_WORKSPACE/wrt/feeds/packages" ] && echo "YES" || echo "NO")"
+       echo "DEBUG: net directory exists: $([ -d "$GITHUB_WORKSPACE/wrt/feeds/packages/net" ] && echo "YES" || echo "NO")"
+       
+       # 尝试使用相对路径作为备选方案
+       if [ -d "../feeds/packages/net" ]; then
+           echo "DEBUG: Using relative path ../feeds/packages/net"
+           rm -rf ../feeds/packages/net/{
+                xray-core,
+                v2ray-geodata,
+                sing-box,
+                chinadns-ng,
+                dns2socks,
+                hysteria,
+                ipt2socks,
+                microsocks,
+                naiveproxy,
+                shadowsocks-libev,
+                shadowsocks-rust,
+                shadowsocksr-libev,
+                simple-obfs,
+                tcping,
+                trojan-plus,
+                tuic-client,
+                v2ray-plugin,
+                xray-plugin,
+                geoview,
+                shadow-tls}
+           echo "Removed conflicting packages from feeds using relative path!"
+       fi
+   fi
 
    # 克隆 Passwall 依赖包（passwall-packages）
    if [ ! -d "$GITHUB_WORKSPACE/wrt/package/passwall-packages" ]; then
