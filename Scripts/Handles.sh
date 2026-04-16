@@ -133,27 +133,7 @@ fi
        echo "DEBUG: Listing packages before removal:"
        ls -la "$FEEDS_NET_DIR" | grep -E "(xray|shadowsocks|sing-box|chinadns|dns2socks|hysteria|ipt2socks|microsocks|naiveproxy|simple-obfs|tcping|trojan|tuic|v2ray|geoview|shadow-tls)" || echo "DEBUG: No matching packages found"
        
-       rm -rf $FEEDS_NET_DIR/{
-            xray-core,
-            v2ray-geodata,
-            sing-box,
-            chinadns-ng,
-            dns2socks,
-            hysteria,
-            ipt2socks,
-            microsocks,
-            naiveproxy,
-            shadowsocks-libev,
-            shadowsocks-rust,
-            shadowsocksr-libev,
-            simple-obfs,
-            tcping,
-            trojan-plus,
-            tuic-client,
-            v2ray-plugin,
-            xray-plugin,
-            geoview,
-            shadow-tls}
+       rm -rf $FEEDS_NET_DIR/{xray-core,v2ray-geodata,sing-box,chinadns-ng,dns2socks,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview,shadow-tls}
        
        echo "DEBUG: Listing packages after removal:"
        ls -la "$FEEDS_NET_DIR" | grep -E "(xray|shadowsocks|sing-box|chinadns|dns2socks|hysteria|ipt2socks|microsocks|naiveproxy|simple-obfs|tcping|trojan|tuic|v2ray|geoview|shadow-tls)" || echo "DEBUG: All conflicting packages removed"
@@ -169,27 +149,7 @@ fi
        # 尝试使用相对路径作为备选方案
        if [ -d "../feeds/packages/net" ]; then
            echo "DEBUG: Using relative path ../feeds/packages/net"
-           rm -rf ../feeds/packages/net/{
-                xray-core,
-                v2ray-geodata,
-                sing-box,
-                chinadns-ng,
-                dns2socks,
-                hysteria,
-                ipt2socks,
-                microsocks,
-                naiveproxy,
-                shadowsocks-libev,
-                shadowsocks-rust,
-                shadowsocksr-libev,
-                simple-obfs,
-                tcping,
-                trojan-plus,
-                tuic-client,
-                v2ray-plugin,
-                xray-plugin,
-                geoview,
-                shadow-tls}
+           rm -rf ../feeds/packages/net/{xray-core,v2ray-geodata,sing-box,chinadns-ng,dns2socks,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview,shadow-tls}
            echo "Removed conflicting packages from feeds using relative path!"
        fi
    fi
