@@ -315,6 +315,8 @@ jobs:
           $GITHUB_WORKSPACE/Scripts/Settings.sh
 
           make defconfig -j$(nproc) && make clean -j$(nproc)
+          
+          #删除shadowsocks-rust因可能存在的错误缓存而不重新下载的问题
           make package/feeds/packages/rust/host/clean || true
           make package/feeds/packages/shadowsocks-rust/clean || true
           rm -rf dl/cargo
