@@ -24,6 +24,8 @@ elif [ -f "$WIFI_UC" ]; then
 	sed -i "s/country='.*'/country='CN'/g" $WIFI_UC
 	#修改WIFI加密
 	sed -i "s/encryption='.*'/encryption='psk2+ccmp'/g" $WIFI_UC
+	#禁用WiFi（刷入路由器后，WiFi 功能默认是禁用/停用状态，可以随时手动开启 WiFi）
+	sed -i "/disabled/i disabled = 1" $WIFI_UC
 fi
 
 CFG_FILE="./package/base-files/files/bin/config_generate"
