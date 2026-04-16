@@ -315,6 +315,9 @@ jobs:
           $GITHUB_WORKSPACE/Scripts/Settings.sh
 
           make defconfig -j$(nproc) && make clean -j$(nproc)
+          make package/feeds/packages/rust/host/clean || true
+          make package/feeds/packages/shadowsocks-rust/clean || true
+          rm -rf dl/cargo
 
           #   如果原生源能够使用就没有必要配置这一部分。
 
