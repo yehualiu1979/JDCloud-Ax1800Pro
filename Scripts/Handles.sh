@@ -119,32 +119,36 @@ fi
 
    # 修复passwall编译失败
    #移除 OpenWRT feeds 自带的 Passwall 依赖核心库（避免版本冲突）
-   if [ -d "$GITHUB_WORKSPACE/wrt/feeds/packages/net" ]; then
-#       rm -rf $GITHUB_WORKSPACE/wrt/feeds/packages/net/{xray-core,v2ray-geodata,sing-box,chinadns-ng,dns2socks,hysteria,ipt2socks,microsocks,naiveproxy,shadowsocks-libev,shadowsocks-rust,shadowsocksr-libev,simple-obfs,tcping,trojan-plus,tuic-client,v2ray-plugin,xray-plugin,geoview,shadow-tls}
+      FEEDS_NET_DIR="$GITHUB_WORKSPACE/wrt/feeds/packages/net"
 
-   rm -rf $GITHUB_WORKSPACE/wrt/feeds/packages/net/{
-     xray-core,
-     v2ray-geodata,
-     sing-box,
-     chinadns-ng,
-     dns2socks,
-     hysteria,
-     ipt2socks,
-     microsocks,
-     naiveproxy,
-     shadowsocks-libev,
-     shadowsocks-rust,
-     shadowsocksr-libev,
-     simple-obfs,
-     tcping,
-     trojan-plus,
-     tuic-client,
-     v2ray-plugin,
-     xray-plugin,
-     geoview,
-     shadow-tls}
-       echo "Removed conflicting packages from feeds!"
-   fi
+      echo "DEBUG: Checking if $FEEDS_NET_DIR exists..."
+      if [ -d "$FEEDS_NET_DIR" ]; then
+          echo "DEBUG: Directory exists, removing conflicting packages..."
+          rm -rf $FEEDS_NET_DIR/{
+               xray-core,
+               v2ray-geodata,
+               sing-box,
+               chinadns-ng,
+               dns2socks,
+               hysteria,
+               ipt2socks,
+               microsocks,
+               naiveproxy,
+               shadowsocks-libev,
+               shadowsocks-rust,
+               shadowsocksr-libev,
+               simple-obfs,
+               tcping,
+               trojan-plus,
+               tuic-client,
+               v2ray-plugin,
+               xray-plugin,
+               geoview,
+               shadow-tls}
+          echo "Removed conflicting packages from feeds!"
+      else
+          echo "DEBUG: Directory $FEEDS_NET_DIR does not exist!"
+      fi
 
    # 克隆 Passwall 依赖包（passwall-packages）
    if [ ! -d "$GITHUB_WORKSPACE/wrt/package/passwall-packages" ]; then
