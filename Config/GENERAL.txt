@@ -109,5 +109,4 @@ CONFIG_PACKAGE_sgdisk=y                               # sgdisk GPT 分区工具�
 # ==================== 内核优化补丁 ====================
 CONFIG_KERNEL_SKB_RECYCLER=y                          # SKB 回收补丁（网络缓冲区回收，提升性能）
 CONFIG_KERNEL_SKB_RECYCLER_MULTI_CPU=y                # 多 CPU SKB 回收（多核优化，提升网络性能）
-#CONFIG_USE_APK=n                                     #禁用 CONFIG_USE_APK，使用ipk而不是apk
-#CONFIG_PACKAGE_luci-ssl=y                             #ssl安全证书，可以https访问路由器
+# CONFIG_USE_APK=n                                    #禁用 CONFIG_USE_APK，使用ipk而不是apk
