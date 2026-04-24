@@ -259,7 +259,7 @@ jobs:
       - name: 首页dashboard
         run: |
           cd ./wrt/
-          #克隆lucky仓库
+          #克隆dashboard仓库
           git clone https://github.com/yehualiu1979/dashboard
           echo "dashboard installation download!"
 
