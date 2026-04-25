@@ -260,7 +260,7 @@ jobs:
         run: |
           cd ./wrt/
           #克隆首页仓库
-          git clone https://github.com/yehualiu1979/shouye feeds/luci/modules/luci-mod-shouye
+          git clone https://github.com/yehualiu1979/shouye package/luci-mod-shouye
           echo "shouye installation download!"
 
       - name: 下载bandix安装包（网络流量监控）
