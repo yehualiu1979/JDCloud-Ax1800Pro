@@ -41,9 +41,9 @@ UPDATE_PACKAGE() {
 }
 
 # 删除官方 dashboard 包，避免冲突
-echo "删除官方 dashboard 包..."
-rm -rf ../feeds/luci/modules/luci-mod-dashboard
-echo "官方 dashboard 包已删除"
+#echo "删除官方 dashboard 包..."
+#rm -rf ../feeds/luci/modules/luci-mod-dashboard
+#echo "官方 dashboard 包已删除"
 
 # 调用示例
 # UPDATE_PACKAGE "OpenAppFilter" "destan19/OpenAppFilter" "master" "" "custom_name1 custom_name2"
