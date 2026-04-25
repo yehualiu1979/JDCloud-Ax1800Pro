@@ -48,6 +48,7 @@ UPDATE_PACKAGE() {
 UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-25.12"
 #UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "master"
 UPDATE_PACKAGE "passwall" "Openwrt-Passwall/openwrt-passwall" "main" "pkg"
+UPDATE_PACKAGE "shouye" "yehualiu1979/shouye" "main"
 #  当使用 "pkg" 参数时，函数会：
 #   1. 克隆整个仓库：下载 https://github.com/Openwrt-Passwall/openwrt-passwall.git
 #   2. 提取匹配的目录：在克隆的仓库中查找名称包含 passwall 的目录（最多3层深度）
