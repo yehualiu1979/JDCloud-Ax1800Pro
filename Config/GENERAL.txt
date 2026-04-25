@@ -12,7 +12,7 @@ CONFIG_PACKAGE_luci-app-tailscale=y                    # Tailscale VPN（点对�
 CONFIG_PACKAGE_luci-app-upnp=y                         # UPnP 端口映射（自动端口转发）
 #CONFIG_PACKAGE_luci-app-wolplus=y                     # 网络唤醒插件（远程开机）
 CONFIG_PACKAGE_luci-app-ramfree=y                      # 内存释放插件（清理内存）
-CONFIG_PACKAGE_luci-mod-dashboard=y                    #主页（官方自用，yml文件258行）
+CONFIG_PACKAGE_luci-mod-dashboard=y                    #主页
 CONFIG_PACKAGE_luci-app-ttyd=y                         #终端
 CONFIG_PACKAGE_luci-app-filemanager=y                  #文件管理器
 
