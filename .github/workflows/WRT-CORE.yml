@@ -260,7 +260,7 @@ jobs:
         run: |
           cd ./wrt/
           #克隆dashboard仓库
-          git clone https://github.com/yehualiu1979/dashboard
+          git clone https://github.com/yehualiu1979/dashboard package/luci-mod-dashboard
           echo "dashboard installation download!"
 
       - name: 下载bandix安装包（网络流量监控）
