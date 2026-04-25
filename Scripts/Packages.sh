@@ -40,6 +40,11 @@ UPDATE_PACKAGE() {
 	fi
 }
 
+# 删除官方 dashboard 包，避免冲突
+echo "删除官方 dashboard 包..."
+rm -rf ../feeds/luci/modules/luci-mod-dashboard
+echo "官方 dashboard 包已删除"
+
 # 调用示例
 # UPDATE_PACKAGE "OpenAppFilter" "destan19/OpenAppFilter" "master" "" "custom_name1 custom_name2"
 # UPDATE_PACKAGE "open-app-filter" "destan19/OpenAppFilter" "master" "" "luci-app-appfilter oaf" 这样会把原有的open-app-filter，luci-app-appfilter，oaf相关组件删除，不会出现coremark错误。
